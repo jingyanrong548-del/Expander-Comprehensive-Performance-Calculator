@@ -29,30 +29,60 @@
 
                 <div class="form-group">
                     <label for="fluid-select">工质 (Fluid)</label>
-                    <select id="fluid-select">
-                        </select>
+                    <select id="fluid-select"></select>
                 </div>
 
                 <fieldset>
                     <legend>进口状态 (Inlet)</legend>
-                    <div class="form-group">
-                        <label for="inlet-pressure">压力 (P1)</label>
-                        <input type="number" id="inlet-pressure" value="20">
-                        <span>bar</span>
+                    <div id="inlet-mode-selector" class="form-group radio-group">
+                        <input type="radio" id="mode-pt" name="inlet-mode" value="pt" checked>
+                        <label for="mode-pt">按压力/温度</label>
+                        <input type="radio" id="mode-tsup" name="inlet-mode" value="tsup">
+                        <label for="mode-tsup">按饱和温度/过热度</label>
                     </div>
-                    <div class="form-group">
-                        <label for="inlet-temperature">温度 (T1)</label>
-                        <input type="number" id="inlet-temperature" value="150">
-                        <span>°C</span>
+                    <div id="inlet-mode-pt">
+                        <div class="form-group">
+                            <label for="inlet-pressure">压力 (P1)</label>
+                            <input type="number" id="inlet-pressure" value="20">
+                            <span>bar</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="inlet-temperature">温度 (T1)</label>
+                            <input type="number" id="inlet-temperature" value="150">
+                            <span>°C</span>
+                        </div>
+                    </div>
+                    <div id="inlet-mode-tsup" class="hidden">
+                        <div class="form-group">
+                            <label id="evap-temp-label" for="evap-temp">蒸发温度</label>
+                            <input type="number" id="evap-temp" value="120">
+                            <span>°C</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="superheat">过热度</label>
+                            <input type="number" id="superheat" value="10">
+                            <span>K</span>
+                        </div>
                     </div>
                 </fieldset>
 
                 <fieldset>
                     <legend>出口状态 (Outlet)</legend>
-                    <div class="form-group">
+                    <div id="outlet-mode-selector" class="form-group radio-group">
+                        <input type="radio" id="outlet-mode-p" name="outlet-mode" value="pressure" checked>
+                        <label for="outlet-mode-p">按压力</label>
+                        <input type="radio" id="outlet-mode-tcond" name="outlet-mode" value="tcond">
+                        <label for="outlet-mode-tcond">按冷凝温度</label>
+                    </div>
+                    <div id="outlet-mode-pressure" class="form-group">
                         <label for="outlet-pressure">压力 (P2)</label>
                         <input type="number" id="outlet-pressure" value="4">
                         <span>bar</span>
+                    </div>
+                    <div id="outlet-mode-cond-temp" class="form-group hidden">
+                        <label for="condensing-temperature">冷凝温度</label>
+                        <input type="number" id="condensing-temperature" value="30">
+                        <span>°C</span>
                     </div>
                 </fieldset>
 
@@ -70,17 +100,17 @@
                     <div class="form-group radio-group">
                         <input type="radio" id="mode-mass" name="flow-mode" value="mass" checked>
                         <label for="mode-mass">按质量流量</label>
+                        <input type="radio" id="mode-displacement" name="flow-mode" value="displacement">
+                        <label for="mode-displacement">按几何排量</label>
                         <input type="radio" id="mode-volume" name="flow-mode" value="volume">
-                        <label for="mode-volume">按容积参数</label>
+                        <label for="mode-volume">按体积流量</label>
                     </div>
-
                     <div id="mass-flow-inputs" class="form-group">
                         <label for="mass-flow">质量流量 (m)</label>
                         <input type="number" id="mass-flow" value="1">
                         <span>kg/s</span>
                     </div>
-
-                    <div id="volume-flow-inputs" class="hidden">
+                    <div id="displacement-flow-inputs" class="hidden">
                         <div class="form-group">
                             <label for="displacement">几何排量 (Vg)</label>
                             <input type="number" id="displacement" value="500">
@@ -97,6 +127,13 @@
                             <span>%</span>
                         </div>
                     </div>
+                    <div id="direct-volume-flow-inputs" class="hidden">
+                         <div class="form-group">
+                            <label for="volume-flow-rate">体积流量</label>
+                            <input type="number" id="volume-flow-rate" value="100">
+                            <span>m³/h</span>
+                        </div>
+                    </div>
                 </fieldset>
 
                 <div class="action-buttons">
@@ -107,7 +144,6 @@
 
             <section class="panel output-panel">
                 <h2>计算结果</h2>
-
                 <div class="results-summary">
                     <div class="result-item">
                         <label>输出功率 (Power)</label>
@@ -172,7 +208,6 @@
                     </table>
                 </div>
             </section>
-
         </div> 
     </main>
 
