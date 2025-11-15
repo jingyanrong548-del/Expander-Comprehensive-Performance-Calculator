@@ -9,7 +9,6 @@
 // ---------------------------------
 //  1. 导入 CoolProp 加载器
 // ---------------------------------
-// 假设您已在 js/ 目录中创建了 coolprop_loader.js 文件
 import { loadCoolProp } from './coolprop_loader.js'; 
 
 // ---------------------------------
@@ -43,11 +42,9 @@ const fluidMaps = {
 //  3. DOM 元素获取与初始化
 // ---------------------------------
 
-// DOMContentLoaded 事件由 <script type="module"> 自动处理，无需手动监听
 let statusBar, fluidSelect, calculateButton, clearButton, tabLinks;
 let massFlowInputs, volumeFlowInputs, flowModeRadios;
 
-// 替换原来的 initializeApp 函数
 function initializeApp() {
     // 获取 DOM 元素
     statusBar = document.getElementById("status-bar");
@@ -72,13 +69,13 @@ function initializeApp() {
     });
 
     // 初始化
-    initAppLogic(); // 调用新的加载逻辑
-    updateFluidOptions('orc'); // 默认加载 ORC 工质
-    handleFlowModeChange(); // 默认设置流量模式
+    initAppLogic(); 
+    updateFluidOptions('orc'); 
+    handleFlowModeChange(); 
 }
 
 // ---------------------------------
-//  4. 应用启动逻辑 (取代旧的 loadCoolProp)
+//  4. 应用启动逻辑
 // ---------------------------------
 
 async function initAppLogic() {
@@ -101,7 +98,7 @@ async function initAppLogic() {
 
     } catch (err) {
         console.error("Failed to load CoolProp:", err);
-        // (修复) 直接使用从 loader 抛出的详细错误信息，并保持换行
+        // 直接使用从 loader 抛出的详细错误信息，并保持换行
         statusBar.textContent = `错误：${err.message}`;
         statusBar.style.backgroundColor = "#fff1f0";
         statusBar.style.color = "#cf1322";
@@ -140,8 +137,8 @@ function handleFlowModeChange() {
     if (selectedMode === 'mass') {
         massFlowInputs.classList.remove('hidden');
         volumeFlowInputs.classList.add('hidden');
-    } else {
-        massFlowInputs.add('hidden');
+    } else { // 'volume'
+        massFlowInputs.classList.add('hidden');
         volumeFlowInputs.classList.remove('hidden');
     }
 }
@@ -241,7 +238,7 @@ function handleCalculation() {
 
         if (selectedMode === 'mass') {
             massFlow_kg_s = parseFloat(document.getElementById("mass-flow").value);
-            if (isNaN(massFlow_kg_s)) throw new Error("质量流量输入无效。");
+            if (isNaN(massFlow_kg_s) || massFlow_kg_s <= 0) throw new Error("质量流量输入必须是正数。");
             inletVolumeFlow_m3_s = massFlow_kg_s * v1;
             
         } else { // 'volume'
@@ -252,6 +249,10 @@ function handleCalculation() {
             if (isNaN(Vg_cm3) || isNaN(rpm) || isNaN(eta_v_percent)) {
                 throw new Error("容积参数输入无效。");
             }
+            if (Vg_cm3 <= 0 || rpm <= 0 || eta_v_percent <= 0) {
+                throw new Error("几何排量、转速和容积效率必须是正数。");
+            }
+
 
             const Vg_m3 = Vg_cm3 / 1e6;
             const eta_v = eta_v_percent / 100.0;
@@ -313,6 +314,12 @@ function updateCell(id, value) {
 }
 
 function formatQuality(x) {
+    if (x > -1e-9 && x < 1e-9) { // 接近 0
+        return "饱和液";
+    }
+    if (x > 1 - 1e-9 && x < 1 + 1e-9) { // 接近 1
+        return "饱和汽";
+    }
     if (x > 0 && x < 1) {
         return x.toFixed(4); 
     } else if (x <= 0 || x === -Infinity) {
@@ -324,5 +331,4 @@ function formatQuality(x) {
 }
 
 // 在 DOM 加载后，启动 App 逻辑
-// 注意：这个在模块中是可选的，但为了安全性和明确性，我们保留它。
 document.addEventListener("DOMContentLoaded", initializeApp);
