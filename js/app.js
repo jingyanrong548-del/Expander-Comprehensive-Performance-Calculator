@@ -1,20 +1,21 @@
 /* * =================================
- * app.js - 膨胀机计算器核心逻辑 (最终修正版)
+ * app.js - 膨胀机计算器核心逻辑 (v2.0 - 效率智能化)
  * 职责: 1. 导入 CoolProp 加载器。
  *       2. 初始化 UI 和事件，处理多模式切换。
- *       3. (修正) 确保切换选项卡时，计算状态被正确同步，修复错误的物性调用问题。
+ *       3. (新增) 实现等熵效率和容积效率的智能化建议功能。
+ *       4. 确保切换选项卡时，计算状态被正确同步。
  * =================================
  */
 
 // ---------------------------------
 //  1. 导入 CoolProp 加载器
 // ---------------------------------
-import { loadCoolProp } from './coolprop_loader.js'; 
+import { loadCoolProp } from './coolprop_loader.js';
 
 // ---------------------------------
-//  2. 全局变量与工质定义
+//  2. 全局变量与常量定义
 // ---------------------------------
-let CP; 
+let CP;
 const KELVIN_OFFSET = 273.15;
 
 const fluidMaps = {
@@ -22,7 +23,12 @@ const fluidMaps = {
     steam: { "水/蒸汽": "Water" },
     gas: { "空气": "Air", "二氧化碳": "CarbonDioxide", "甲烷": "Methane", "氮气": "Nitrogen" }
 };
-let currentTab = 'orc'; 
+let currentTab = 'orc';
+
+// [NEW] 效率预设数据模型
+const ISENTROPIC_PRESETS = { small: 78, medium: 85, large: 88 };
+const VOLUMETRIC_PRESETS = { low_pr: 92, medium_pr: 90, high_pr: 85 };
+
 
 // ---------------------------------
 //  3. DOM 元素获取
@@ -31,6 +37,10 @@ let statusBar, fluidSelect, calculateButton, clearButton, tabLinks;
 let inletModeSelector, inletModeRadios, inletModePT, inletModeTsup, evapTempLabel;
 let outletModeSelector, outletModeRadios, outletModePressure, outletModeCondTemp;
 let flowModeRadios, massFlowInputs, displacementFlowInputs, directVolumeFlowInputs;
+// [NEW] 效率相关的UI元素
+let efficiencyPresetSelect, isentropicEfficiencyInput;
+let volEfficiencyPresetSelect, volumetricEfficiencyInput;
+
 
 function initializeApp() {
     // 通用元素
@@ -59,21 +69,35 @@ function initializeApp() {
     displacementFlowInputs = document.getElementById("displacement-flow-inputs");
     directVolumeFlowInputs = document.getElementById("direct-volume-flow-inputs");
 
-    // 绑定事件
+    // [NEW] 效率相关的UI元素
+    efficiencyPresetSelect = document.getElementById("efficiency-preset");
+    isentropicEfficiencyInput = document.getElementById("isentropic-efficiency");
+    volEfficiencyPresetSelect = document.getElementById("vol-efficiency-preset");
+    volumetricEfficiencyInput = document.getElementById("volumetric-efficiency");
+
+
+    // --- 绑定事件 ---
     calculateButton.addEventListener("click", handleCalculation);
     clearButton.addEventListener("click", clearForm);
     tabLinks.forEach(link => link.addEventListener("click", handleTabClick));
     inletModeRadios.forEach(radio => radio.addEventListener("change", handleInletModeChange));
     outletModeRadios.forEach(radio => radio.addEventListener("change", handleOutletModeChange));
     flowModeRadios.forEach(radio => radio.addEventListener("change", handleFlowModeChange));
+    // [NEW] 绑定效率预设下拉框的change事件
+    efficiencyPresetSelect.addEventListener("change", handleIsentropicPresetChange);
+    volEfficiencyPresetSelect.addEventListener("change", handleVolumetricPresetChange);
 
-    // 初始化
+
+    // --- 初始化 ---
     initAppLogic();
-    updateUIForTab(); 
+    updateUIForTab();
     updateFluidOptions();
     handleInletModeChange();
     handleOutletModeChange();
     handleFlowModeChange();
+    // [NEW] 初始化效率输入框的状态
+    handleIsentropicPresetChange();
+    handleVolumetricPresetChange();
 }
 
 // ---------------------------------
@@ -98,15 +122,38 @@ async function initAppLogic() {
 }
 
 // ---------------------------------
-//  5. UI 交互处理 
+//  5. UI 交互处理 (包括新增的效率处理)
 // ---------------------------------
+
+// [NEW] 处理等熵效率预设变化的函数
+function handleIsentropicPresetChange() {
+    const selectedMode = efficiencyPresetSelect.value;
+    if (selectedMode === 'manual') {
+        isentropicEfficiencyInput.readOnly = false;
+    } else {
+        isentropicEfficiencyInput.value = ISENTROPIC_PRESETS[selectedMode];
+        isentropicEfficiencyInput.readOnly = true;
+    }
+}
+
+// [NEW] 处理容积效率预设变化的函数
+function handleVolumetricPresetChange() {
+    const selectedMode = volEfficiencyPresetSelect.value;
+    if (selectedMode === 'manual') {
+        volumetricEfficiencyInput.readOnly = false;
+    } else {
+        volumetricEfficiencyInput.value = VOLUMETRIC_PRESETS[selectedMode];
+        volumetricEfficiencyInput.readOnly = true;
+    }
+}
+
 function handleTabClick(event) {
     tabLinks.forEach(link => link.classList.remove("active"));
     const clickedTab = event.target;
     clickedTab.classList.add("active");
     currentTab = clickedTab.dataset.tab;
-    updateFluidOptions(); // 关键：先更新选项
-    updateUIForTab();     // 再更新UI
+    updateFluidOptions();
+    updateUIForTab();
 }
 
 function updateFluidOptions() {
@@ -116,8 +163,6 @@ function updateFluidOptions() {
         const option = new Option(displayName, coolPropName);
         fluidSelect.add(option);
     }
-    // 【关键修复】: 动态添加选项后，手动将选择索引重置为第一个。
-    // 这可以确保 fluidSelect.value 总是与新列表的第一个选项同步。
     if (fluidSelect.options.length > 0) {
         fluidSelect.selectedIndex = 0;
     }
@@ -161,43 +206,53 @@ function handleFlowModeChange() {
 }
 
 function clearForm() {
+    // 重置输入值
     document.getElementById("inlet-pressure").value = "20";
     document.getElementById("inlet-temperature").value = "150";
     document.getElementById("evap-temp").value = "120";
     document.getElementById("superheat").value = "10";
     document.getElementById("outlet-pressure").value = "4";
     document.getElementById("condensing-temperature").value = "30";
-    document.getElementById("isentropic-efficiency").value = "85";
     document.getElementById("mass-flow").value = "1";
     document.getElementById("displacement").value = "500";
     document.getElementById("rpm").value = "3000";
-    document.getElementById("volumetric-efficiency").value = "90";
     document.getElementById("volume-flow-rate").value = "100";
     
+    // [MODIFIED] 重置效率下拉框和输入框
+    efficiencyPresetSelect.value = "medium"; // 重置为默认的“中型机”
+    volEfficiencyPresetSelect.value = "medium_pr"; // 重置为默认的“中压比”
+    handleIsentropicPresetChange(); // 同步更新输入框的值和状态
+    handleVolumetricPresetChange(); // 同步更新输入框的值和状态
+
+    // 清空结果
     document.getElementById("result-power").value = "";
     document.getElementById("result-mass-flow").value = "";
     document.getElementById("result-volume-flow").value = "";
-
     const cells = document.querySelectorAll("#results-table-body td[id]");
     cells.forEach(cell => { cell.textContent = "--"; });
 
+    // 重置模式选择
     document.getElementById("mode-pt").checked = true;
     document.getElementById("outlet-mode-p").checked = true;
     document.getElementById("mode-mass").checked = true;
 
+    // 更新UI
     updateUIForTab();
     handleFlowModeChange();
 
+    // 更新状态栏
     statusBar.textContent = "已清空。";
     statusBar.style.backgroundColor = "#f9f9f9";
     statusBar.style.color = "#555";
     statusBar.style.whiteSpace = "normal";
 }
 
+
 // ---------------------------------
 //  6. 核心计算逻辑 
 // ---------------------------------
 function handleCalculation() {
+    // ... (此部分无逻辑变化，保持原样) ...
     if (!CP) {
         statusBar.textContent = "错误：CoolProp 尚未加载完成。";
         return;
@@ -206,19 +261,17 @@ function handleCalculation() {
         const fluidName = fluidSelect.value;
         let p1_pa, t1_k, p2_pa;
 
-        // 【防御性代码】确保所选流体属于当前标签页
         const validFluids = Object.values(fluidMaps[currentTab]);
         if (!validFluids.includes(fluidName)) {
             throw new Error(`内部状态错误：当前工质 '${fluidName}' 与选项卡 '${currentTab}' 不匹配。`);
         }
 
-        // --- 确定进口状态 ---
         const inletMode = document.querySelector('input[name="inlet-mode"]:checked').value;
         if (currentTab === 'gas' || inletMode === 'pt') {
             p1_pa = parseFloat(document.getElementById("inlet-pressure").value) * 1e5;
             t1_k = parseFloat(document.getElementById("inlet-temperature").value) + KELVIN_OFFSET;
             if (isNaN(p1_pa) || isNaN(t1_k)) throw new Error("压力/温度输入无效。");
-        } else { // 'tsup'
+        } else {
             const evap_temp_k = parseFloat(document.getElementById("evap-temp").value) + KELVIN_OFFSET;
             const superheat_k = parseFloat(document.getElementById("superheat").value);
             if (isNaN(evap_temp_k) || isNaN(superheat_k)) throw new Error("饱和温度/过热度输入无效。");
@@ -226,22 +279,20 @@ function handleCalculation() {
             t1_k = evap_temp_k + superheat_k;
         }
 
-        // --- 确定出口压力 ---
         const outletMode = document.querySelector('input[name="outlet-mode"]:checked').value;
         if (currentTab === 'gas' || outletMode === 'pressure') {
             p2_pa = parseFloat(document.getElementById("outlet-pressure").value) * 1e5;
             if (isNaN(p2_pa)) throw new Error("出口压力输入无效。");
-        } else { // 'tcond'
+        } else {
             const t_cond_k = parseFloat(document.getElementById("condensing-temperature").value) + KELVIN_OFFSET;
             if (isNaN(t_cond_k)) throw new Error("冷凝温度输入无效。");
             p2_pa = CP.PropsSI('P', 'T', t_cond_k, 'Q', 0, fluidName);
         }
 
-        const eta_s = parseFloat(document.getElementById("isentropic-efficiency").value) / 100.0;
+        const eta_s = parseFloat(isentropicEfficiencyInput.value) / 100.0;
         if (isNaN(eta_s) || eta_s <= 0 || eta_s > 1) throw new Error("等熵效率必须在 (0, 100] 范围内。");
         if (p2_pa >= p1_pa) throw new Error("计算出的出口压力 (" + (p2_pa/1e5).toFixed(2) + " bar) 必须低于进口压力 (" + (p1_pa/1e5).toFixed(2) + " bar)。");
 
-        // --- 状态点计算 ---
         const h1 = CP.PropsSI('H', 'P', p1_pa, 'T', t1_k, fluidName); 
         const s1 = CP.PropsSI('S', 'P', p1_pa, 'T', t1_k, fluidName); 
         const v1 = 1.0 / CP.PropsSI('D', 'P', p1_pa, 'T', t1_k, fluidName); 
@@ -262,7 +313,6 @@ function handleCalculation() {
         const phase2a = CP.PropsSI('Phase', 'P', p2_pa, 'H', h2a, fluidName);
         const x2a = (phase2a === 3) ? CP.PropsSI('Q', 'P', p2_pa, 'H', h2a, fluidName) : -1;
 
-        // --- 流量和功率计算 ---
         let massFlow_kg_s;
         const flowMode = document.querySelector('input[name="flow-mode"]:checked').value;
         switch (flowMode) {
@@ -273,7 +323,7 @@ function handleCalculation() {
             case 'displacement':
                 const Vg_cm3 = parseFloat(document.getElementById("displacement").value);
                 const rpm = parseFloat(document.getElementById("rpm").value);
-                const eta_v = parseFloat(document.getElementById("volumetric-efficiency").value) / 100.0;
+                const eta_v = parseFloat(volumetricEfficiencyInput.value) / 100.0;
                 if (isNaN(Vg_cm3) || isNaN(rpm) || isNaN(eta_v)) throw new Error("几何排量参数输入无效。");
                 if (Vg_cm3 <= 0 || rpm <= 0 || eta_v <= 0) throw new Error("几何排量、转速和容积效率必须是正数。");
                 massFlow_kg_s = ((Vg_cm3 / 1e6 * rpm) / 60.0 * eta_v) / v1;
@@ -288,7 +338,6 @@ function handleCalculation() {
         const power_W = massFlow_kg_s * (h1 - h2a);
         const final_inlet_volume_flow_m3h = massFlow_kg_s * v1 * 3600;
 
-        // --- 显示结果 ---
         document.getElementById("result-power").value = (power_W / 1000.0).toFixed(2); 
         document.getElementById("result-mass-flow").value = massFlow_kg_s.toFixed(3); 
         document.getElementById("result-volume-flow").value = final_inlet_volume_flow_m3h.toFixed(2); 
@@ -335,6 +384,7 @@ function updateCell(id, value) {
 }
 
 function formatPhase(phaseIndex, qualityValue) {
+    // ... (此部分无逻辑变化，保持原样) ...
     if (currentTab === 'gas') return "N/A";
     switch (phaseIndex) {
         case 0: return "过冷";

@@ -144,7 +144,8 @@ legend {
 }
 
 .form-group label {
-    flex-basis: 140px; /* 标签固定宽度 */
+    /* [MODIFIED] 减小标签宽度以防止重叠 */
+    flex-basis: 120px; 
     font-weight: 500;
 }
 
@@ -158,10 +159,22 @@ legend {
     font-size: 15px;
 }
 
+/* [MODIFIED] 调整预设下拉框的宽度以防止重叠 */
+.form-group .preset-select {
+    flex-basis: 130px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    margin-right: 10px;
+    font-size: 14px;
+    padding: 8px 10px;
+    cursor: pointer;
+}
+
 .form-group input[readonly] {
     background-color: #f0f0f0;
     color: #222;
     font-weight: bold;
+    cursor: not-allowed;
 }
 
 .form-group span {

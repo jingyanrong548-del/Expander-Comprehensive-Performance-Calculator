@@ -82,14 +82,21 @@
                     <div id="outlet-mode-cond-temp" class="form-group hidden">
                         <label for="condensing-temperature">冷凝温度</label>
                         <input type="number" id="condensing-temperature" value="30">
-                        <span>°C</span>
+                            <span>°C</span>
                     </div>
                 </fieldset>
 
                 <fieldset>
                     <legend>性能参数</legend>
+                    <!-- [MODIFIED] 增加了效率预设下拉框 -->
                     <div class="form-group">
                         <label for="isentropic-efficiency">等熵效率 (ηs)</label>
+                        <select id="efficiency-preset" class="preset-select">
+                            <option value="manual">手动输入</option>
+                            <option value="small">建议 (小型机)</option>
+                            <option value="medium" selected>建议 (中型机)</option>
+                            <option value="large">建议 (大型机)</option>
+                        </select>
                         <input type="number" id="isentropic-efficiency" value="85">
                         <span>%</span>
                     </div>
@@ -121,8 +128,15 @@
                             <input type="number" id="rpm" value="3000">
                             <span>rpm</span>
                         </div>
+                        <!-- [MODIFIED] 增加了效率预设下拉框 -->
                         <div class="form-group">
                             <label for="volumetric-efficiency">容积效率 (ηv)</label>
+                            <select id="vol-efficiency-preset" class="preset-select">
+                                <option value="manual">手动输入</option>
+                                <option value="low_pr">建议 (低压比)</option>
+                                <option value="medium_pr" selected>建议 (中压比)</option>
+                                <option value="high_pr">建议 (高压比)</option>
+                            </select>
                             <input type="number" id="volumetric-efficiency" value="90">
                             <span>%</span>
                         </div>
