@@ -107,10 +107,57 @@ header h1 {
 @media (max-width: 800px) {
     .calculator-body {
         flex-direction: column;
+        padding: 10px; /* [优化] 手机上减少内边距，留更多空间给内容 */
     }
-    .input-panel {
+
+    .input-panel, .output-panel {
+        /* [核心修复] 重置最小宽度，允许面板适应手机屏幕宽度 */
+        min-width: auto; 
+        width: 100%;
         border-right: none;
         border-bottom: 1px solid #eee;
+        padding: 15px 10px; /* [优化] 减小面板内部边距 */
+    }
+
+    /* [新增优化] 手机上表单变为垂直排列，避免输入框太短 */
+    .form-group {
+        flex-direction: column;
+        align-items: stretch; /* 拉伸占满宽度 */
+    }
+
+    .form-group label {
+        flex-basis: auto;
+        margin-bottom: 5px; /* 标签和输入框之间增加间距 */
+    }
+    
+    /* 特殊处理：单选框组保持水平排列 */
+    .radio-group {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    /* 结果项也垂直排列，防止文字截断 */
+    .result-item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .result-item label {
+        margin-bottom: 5px;
+    }
+    
+    /* 调整预设下拉框在手机上的样式 */
+    .form-group .preset-select {
+        flex-basis: auto;
+        margin-right: 0;
+        margin-bottom: 5px;
+        width: 100%;
+    }
+    
+    .form-group span {
+        margin-left: 0;
+        margin-top: 5px;
+        text-align: right;
     }
 }
 
