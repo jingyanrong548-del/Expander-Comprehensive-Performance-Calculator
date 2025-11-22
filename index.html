@@ -2,230 +2,310 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>膨胀机综合性能计算器</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header>
-        <h1>膨胀机综合性能计算器</h1>
+    <header class="main-header">
+        <h1>膨胀机性能计算</h1>
     </header>
 
-    <main class="app-container">
+    <div class="app-wrapper">
         
-        <div id="status-bar">正在加载 CoolProp 物性库...</div>
+        <!-- 状态通知栏 -->
+        <div id="status-bar" class="status-bar">正在加载 CoolProp 物性库...</div>
 
+        <!-- 顶部导航 Tab -->
         <nav class="tab-nav">
             <button class="tab-link active" data-tab="orc">ORC</button>
             <button class="tab-link" data-tab="steam">水/蒸汽</button>
             <button class="tab-link" data-tab="gas">气体</button>
         </nav>
 
-        <div class="calculator-body">
+        <main class="calculator-grid">
 
-            <section class="panel input-panel">
-                <h2>输入参数</h2>
-
-                <div class="form-group">
-                    <label for="fluid-select">工质 (Fluid)</label>
-                    <select id="fluid-select"></select>
+            <!-- 左侧：输入面板 -->
+            <section class="card input-card">
+                <div class="card-header">
+                    <h2>参数设置</h2>
                 </div>
 
-                <fieldset>
-                    <legend>进口状态 (Inlet)</legend>
-                    <div id="inlet-mode-selector" class="form-group radio-group">
-                        <input type="radio" id="mode-pt" name="inlet-mode" value="pt" checked>
-                        <label for="mode-pt">按压力/温度</label>
-                        <input type="radio" id="mode-tsup" name="inlet-mode" value="tsup">
-                        <label for="mode-tsup">按饱和温度/过热度</label>
-                    </div>
-                    <div id="inlet-mode-pt">
-                        <div class="form-group">
-                            <label for="inlet-pressure">压力 (P1)</label>
-                            <input type="number" id="inlet-pressure" value="20">
-                            <span>bar</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="inlet-temperature">温度 (T1)</label>
-                            <input type="number" id="inlet-temperature" value="150">
-                            <span>°C</span>
+                <div class="card-body">
+                    <!-- 工质选择 -->
+                    <div class="input-group">
+                        <label class="input-label">工质 (Fluid)</label>
+                        <div class="input-wrapper select-wrapper">
+                            <select id="fluid-select" class="full-width"></select>
                         </div>
                     </div>
-                    <div id="inlet-mode-tsup" class="hidden">
-                        <div class="form-group">
-                            <label id="evap-temp-label" for="evap-temp">蒸发温度</label>
-                            <input type="number" id="evap-temp" value="120">
-                            <span>°C</span>
-                        </div>
-                        <div class="form-group">
-                            <label for="superheat">过热度</label>
-                            <input type="number" id="superheat" value="10">
-                            <span>K</span>
-                        </div>
-                    </div>
-                </fieldset>
 
-                <fieldset>
-                    <legend>出口状态 (Outlet)</legend>
-                    <div id="outlet-mode-selector" class="form-group radio-group">
-                        <input type="radio" id="outlet-mode-p" name="outlet-mode" value="pressure" checked>
-                        <label for="outlet-mode-p">按压力</label>
-                        <input type="radio" id="outlet-mode-tcond" name="outlet-mode" value="tcond">
-                        <label for="outlet-mode-tcond">按冷凝温度</label>
+                    <!-- 进口状态 -->
+                    <div class="section-divider">进口状态 (Inlet)</div>
+                    <div id="inlet-mode-selector" class="radio-pill-group">
+                        <label class="radio-pill">
+                            <input type="radio" id="mode-pt" name="inlet-mode" value="pt" checked>
+                            <span>压力/温度</span>
+                        </label>
+                        <label class="radio-pill">
+                            <input type="radio" id="mode-tsup" name="inlet-mode" value="tsup">
+                            <span>饱和/过热</span>
+                        </label>
                     </div>
-                    <div id="outlet-mode-pressure" class="form-group">
-                        <label for="outlet-pressure">压力 (P2)</label>
-                        <input type="number" id="outlet-pressure" value="4">
-                        <span>bar</span>
-                    </div>
-                    <div id="outlet-mode-cond-temp" class="form-group hidden">
-                        <label for="condensing-temperature">冷凝温度</label>
-                        <input type="number" id="condensing-temperature" value="30">
-                            <span>°C</span>
-                    </div>
-                </fieldset>
 
-                <fieldset>
-                    <legend>性能参数</legend>
-                    <!-- [MODIFIED] 增加了效率预设下拉框 -->
-                    <div class="form-group">
-                        <label for="isentropic-efficiency">等熵效率 (ηs)</label>
-                        <select id="efficiency-preset" class="preset-select">
-                            <option value="manual">手动输入</option>
-                            <option value="small">建议 (小型机)</option>
-                            <option value="medium" selected>建议 (中型机)</option>
-                            <option value="large">建议 (大型机)</option>
-                        </select>
-                        <input type="number" id="isentropic-efficiency" value="85">
-                        <span>%</span>
+                    <div id="inlet-mode-pt" class="input-row">
+                        <div class="input-group half">
+                            <label class="input-label">压力 (P1)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="inlet-pressure" value="20">
+                                <span class="unit">bar</span>
+                            </div>
+                        </div>
+                        <div class="input-group half">
+                            <label class="input-label">温度 (T1)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="inlet-temperature" value="150">
+                                <span class="unit">°C</span>
+                            </div>
+                        </div>
                     </div>
-                </fieldset>
 
-                <fieldset>
-                    <legend>流量计算模式</legend>
-                    <div class="form-group radio-group">
-                        <input type="radio" id="mode-mass" name="flow-mode" value="mass" checked>
-                        <label for="mode-mass">按质量流量</label>
-                        <input type="radio" id="mode-displacement" name="flow-mode" value="displacement">
-                        <label for="mode-displacement">按几何排量</label>
-                        <input type="radio" id="mode-volume" name="flow-mode" value="volume">
-                        <label for="mode-volume">按体积流量</label>
-                    </div>
-                    <div id="mass-flow-inputs" class="form-group">
-                        <label for="mass-flow">质量流量 (m)</label>
-                        <input type="number" id="mass-flow" value="1">
-                        <span>kg/s</span>
-                    </div>
-                    <div id="displacement-flow-inputs" class="hidden">
-                        <div class="form-group">
-                            <label for="displacement">几何排量 (Vg)</label>
-                            <input type="number" id="displacement" value="500">
-                            <span>cm³/rev</span>
+                    <div id="inlet-mode-tsup" class="input-row hidden">
+                        <div class="input-group half">
+                            <label id="evap-temp-label" class="input-label">蒸发温度</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="evap-temp" value="120">
+                                <span class="unit">°C</span>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="rpm">转速 (RPM)</label>
-                            <input type="number" id="rpm" value="3000">
-                            <span>rpm</span>
+                        <div class="input-group half">
+                            <label class="input-label">过热度</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="superheat" value="10">
+                                <span class="unit">K</span>
+                            </div>
                         </div>
-                        <!-- [MODIFIED] 增加了效率预设下拉框 -->
-                        <div class="form-group">
-                            <label for="volumetric-efficiency">容积效率 (ηv)</label>
-                            <select id="vol-efficiency-preset" class="preset-select">
-                                <option value="manual">手动输入</option>
-                                <option value="low_pr">建议 (低压比)</option>
-                                <option value="medium_pr" selected>建议 (中压比)</option>
-                                <option value="high_pr">建议 (高压比)</option>
+                    </div>
+
+                    <!-- 出口状态 -->
+                    <div class="section-divider">出口状态 (Outlet)</div>
+                    <div id="outlet-mode-selector" class="radio-pill-group">
+                        <label class="radio-pill">
+                            <input type="radio" id="outlet-mode-p" name="outlet-mode" value="pressure" checked>
+                            <span>按压力</span>
+                        </label>
+                        <label class="radio-pill">
+                            <input type="radio" id="outlet-mode-tcond" name="outlet-mode" value="tcond">
+                            <span>按冷凝温度</span>
+                        </label>
+                    </div>
+
+                    <div id="outlet-mode-pressure" class="input-group">
+                        <label class="input-label">出口压力 (P2)</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="outlet-pressure" value="4">
+                            <span class="unit">bar</span>
+                        </div>
+                    </div>
+                    <div id="outlet-mode-cond-temp" class="input-group hidden">
+                        <label class="input-label">冷凝温度</label>
+                        <div class="input-wrapper">
+                            <input type="number" id="condensing-temperature" value="30">
+                            <span class="unit">°C</span>
+                        </div>
+                    </div>
+
+                    <!-- 性能参数 -->
+                    <div class="section-divider">性能参数</div>
+                    <div class="input-group">
+                        <label class="input-label">等熵效率 (ηs)</label>
+                        <div class="input-combo">
+                            <select id="efficiency-preset" class="preset-select">
+                                <option value="manual">手动</option>
+                                <option value="small">小型机</option>
+                                <option value="medium" selected>中型机</option>
+                                <option value="large">大型机</option>
                             </select>
-                            <input type="number" id="volumetric-efficiency" value="90">
-                            <span>%</span>
+                            <div class="input-wrapper">
+                                <input type="number" id="isentropic-efficiency" value="85">
+                                <span class="unit">%</span>
+                            </div>
                         </div>
                     </div>
-                    <div id="direct-volume-flow-inputs" class="hidden">
-                         <div class="form-group">
-                            <label for="volume-flow-rate">体积流量</label>
-                            <input type="number" id="volume-flow-rate" value="100">
-                            <span>m³/h</span>
-                        </div>
-                    </div>
-                </fieldset>
 
-                <div class="action-buttons">
-                    <button id="calculate-button" disabled>计算</button>
-                    <button id="clear-button" type="reset">清空</button>
+                    <!-- 流量模式 -->
+                    <div class="section-divider">流量计算模式</div>
+                    <div class="radio-list">
+                        <label class="radio-item">
+                            <input type="radio" id="mode-mass" name="flow-mode" value="mass" checked>
+                            <span class="radio-text">按质量流量</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" id="mode-displacement" name="flow-mode" value="displacement">
+                            <span class="radio-text">按几何排量</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" id="mode-volume" name="flow-mode" value="volume">
+                            <span class="radio-text">按体积流量</span>
+                        </label>
+                    </div>
+
+                    <!-- 动态流量输入框 -->
+                    <div class="dynamic-inputs">
+                        <div id="mass-flow-inputs" class="input-group">
+                            <label class="input-label">质量流量 (m)</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="mass-flow" value="1">
+                                <span class="unit">kg/s</span>
+                            </div>
+                        </div>
+
+                        <div id="displacement-flow-inputs" class="hidden">
+                            <div class="input-row">
+                                <div class="input-group half">
+                                    <label class="input-label">排量 (Vg)</label>
+                                    <div class="input-wrapper">
+                                        <input type="number" id="displacement" value="500">
+                                        <span class="unit">cc/r</span>
+                                    </div>
+                                </div>
+                                <div class="input-group half">
+                                    <label class="input-label">转速</label>
+                                    <div class="input-wrapper">
+                                        <input type="number" id="rpm" value="3000">
+                                        <span class="unit">rpm</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label class="input-label">容积效率 (ηv)</label>
+                                <div class="input-combo">
+                                    <select id="vol-efficiency-preset" class="preset-select">
+                                        <option value="manual">手动</option>
+                                        <option value="low_pr">低压比</option>
+                                        <option value="medium_pr" selected>中压比</option>
+                                        <option value="high_pr">高压比</option>
+                                    </select>
+                                    <div class="input-wrapper">
+                                        <input type="number" id="volumetric-efficiency" value="90">
+                                        <span class="unit">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="direct-volume-flow-inputs" class="input-group hidden">
+                            <label class="input-label">体积流量</label>
+                            <div class="input-wrapper">
+                                <input type="number" id="volume-flow-rate" value="100">
+                                <span class="unit">m³/h</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 按钮 -->
+                    <div class="button-group">
+                        <button id="calculate-button" class="btn btn-primary" disabled>开始计算</button>
+                        <button id="clear-button" class="btn btn-secondary">清空重置</button>
+                    </div>
+
                 </div>
             </section>
 
-            <section class="panel output-panel">
-                <h2>计算结果</h2>
-                <div class="results-summary">
-                    <div class="result-item">
-                        <label>输出功率 (Power)</label>
-                        <input type="text" id="result-power" readonly>
-                        <span>kW</span>
-                    </div>
-                    <div class="result-item">
-                        <label>质量流量 (Mass Flow)</label>
-                        <input type="text" id="result-mass-flow" readonly>
-                        <span>kg/s</span>
-                    </div>
-                    <div class="result-item">
-                        <label>进口体积流量 (Inlet Vol. Flow)</label>
-                        <input type="text" id="result-volume-flow" readonly>
-                        <span>m³/h</span>
-                    </div>
+            <!-- 右侧：结果面板 -->
+            <section class="card output-card">
+                <div class="card-header">
+                    <h2>计算结果</h2>
                 </div>
+                <div class="card-body">
+                    
+                    <div class="result-highlight">
+                        <div class="result-box">
+                            <label>输出功率</label>
+                            <div class="result-value">
+                                <input type="text" id="result-power" readonly placeholder="--">
+                                <span class="unit">kW</span>
+                            </div>
+                        </div>
+                        <div class="result-row-group">
+                             <div class="result-mini-box">
+                                <label>质量流量</label>
+                                <div class="flex-val">
+                                    <input type="text" id="result-mass-flow" readonly placeholder="--">
+                                    <small>kg/s</small>
+                                </div>
+                             </div>
+                             <div class="result-mini-box">
+                                <label>进口体积流量</label>
+                                <div class="flex-val">
+                                    <input type="text" id="result-volume-flow" readonly placeholder="--">
+                                    <small>m³/h</small>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
 
-                <h3>状态点参数</h3>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>状态点</th>
-                                <th>压力 (bar)</th>
-                                <th>温度 (°C)</th>
-                                <th>焓值 (kJ/kg)</th>
-                                <th>熵 (kJ/kg·K)</th>
-                                <th>比容 (m³/kg)</th>
-                                <th>干度 (x)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="results-table-body">
-                            <tr>
-                                <td>1 (进口)</td>
-                                <td id="val-p1">--</td>
-                                <td id="val-t1">--</td>
-                                <td id="val-h1">--</td>
-                                <td id="val-s1">--</td>
-                                <td id="val-v1">--</td>
-                                <td id="val-x1">--</td>
-                            </tr>
-                            <tr>
-                                <td>2s (理想出口)</td>
-                                <td id="val-p2s">--</td>
-                                <td id="val-t2s">--</td>
-                                <td id="val-h2s">--</td>
-                                <td id="val-s2s">--</td>
-                                <td id="val-v2s">--</td>
-                                <td id="val-x2s">--</td>
-                            </tr>
-                            <tr>
-                                <td>2a (实际出口)</td>
-                                <td id="val-p2a">--</td>
-                                <td id="val-t2a">--</td>
-                                <td id="val-h2a">--</td>
-                                <td id="val-s2a">--</td>
-                                <td id="val-v2a">--</td>
-                                <td id="val-x2a">--</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <h3>状态点详情</h3>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>参数</th>
+                                    <th>1 (进)</th>
+                                    <th>2s (等熵)</th>
+                                    <th>2a (实际)</th>
+                                </tr>
+                            </thead>
+                           <tbody id="results-table-body">
+    <tr>
+        <td>压力 (bar)</td>
+        <td id="val-p1">--</td>
+        <td id="val-p2s">--</td>
+        <td id="val-p2a">--</td>
+    </tr>
+    <tr>
+        <td>温度 (°C)</td>
+        <td id="val-t1">--</td>
+        <td id="val-t2s">--</td>
+        <td id="val-t2a">--</td>
+    </tr>
+    <tr>
+        <td>焓 (kJ/kg)</td>
+        <td id="val-h1">--</td>
+        <td id="val-h2s">--</td>
+        <td id="val-h2a">--</td>
+    </tr>
+    <tr>
+        <td>熵 (kJ/kgK)</td>
+        <td id="val-s1">--</td>
+        <td id="val-s2s">--</td>
+        <td id="val-s2a">--</td>
+    </tr>
+    <!-- [补回] 漏掉的比容行 -->
+    <tr>
+        <td>比容 (m³/kg)</td>
+        <td id="val-v1">--</td>
+        <td id="val-v2s">--</td>
+        <td id="val-v2a">--</td>
+    </tr>
+    <tr>
+        <td>干度</td>
+        <td id="val-x1">--</td>
+        <td id="val-x2s">--</td>
+        <td id="val-x2a">--</td>
+    </tr>
+</tbody>
+                        </table>
+                        <p class="table-hint">* 左右滑动查看更多数据</p>
+                    </div>
+
                 </div>
             </section>
-        </div> 
-    </main>
+
+        </main>
+    </div>
 
 <script type="module" src="js/app.js"></script>
-
 </body>
 </html>

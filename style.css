@@ -1,352 +1,486 @@
 /* * --------------------------------
- * 1. 全局与布局 (Global & Layout)
+ * 1. 基础设置与变量
  * --------------------------------
  */
+:root {
+    --primary-color: #007aff;
+    --primary-hover: #005bb5;
+    --bg-color: #f2f4f6;
+    --card-bg: #ffffff;
+    --text-main: #333333;
+    --text-sub: #666666;
+    --border-color: #e5e5e5;
+    --input-bg: #f7f9fa;
+    --radius: 12px;
+    --shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-    background-color: #f4f7f9;
-    color: #333;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
     margin: 0;
-    padding: 20px;
-    line-height: 1.6;
+    padding: 0;
+    line-height: 1.5;
+    -webkit-tap-highlight-color: transparent; /* 去除点击高亮 */
 }
 
-header {
+/* 顶部标题栏 */
+.main-header {
+    background-color: var(--card-bg);
     text-align: center;
-    border-bottom: 2px solid #007aff;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
+    padding: 15px 0;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-header h1 {
-    color: #007aff;
+.main-header h1 {
     margin: 0;
+    font-size: 1.2rem;
+    color: var(--text-main);
+    font-weight: 700;
 }
 
-.app-container {
-    max-width: 1200px;
+.app-wrapper {
+    max-width: 1000px;
     margin: 0 auto;
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    overflow: hidden;
+    padding: 15px;
 }
 
 /* * --------------------------------
- * 2. 状态栏 (Status Bar)
+ * 2. 导航与状态
  * --------------------------------
  */
-#status-bar {
-    padding: 10px 20px;
-    background-color: #fffbe6;
-    border-bottom: 1px solid #ffe58f;
-    color: #d46b08;
-    font-weight: 500;
+.status-bar {
     text-align: center;
+    font-size: 0.9rem;
+    padding: 8px;
+    background: #fffbe6;
+    color: #d46b08;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    display: block;
 }
 
-/* * --------------------------------
- * 3. 选项卡导航 (Tabs)
- * --------------------------------
- */
 .tab-nav {
     display: flex;
-    background-color: #f9f9f9;
-    border-bottom: 1px solid #ddd;
+    background: #e0e6ed;
+    border-radius: var(--radius);
+    padding: 4px;
+    margin-bottom: 20px;
 }
 
 .tab-link {
-    padding: 14px 20px;
+    flex: 1;
     border: none;
-    background: none;
+    background: transparent;
+    padding: 10px;
+    font-size: 15px;
+    color: var(--text-sub);
     cursor: pointer;
-    font-size: 16px;
-    color: #555;
-    border-bottom: 3px solid transparent;
-    transition: all 0.3s ease;
-}
-
-.tab-link:hover {
-    background-color: #f0f0f0;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s;
 }
 
 .tab-link.active {
-    color: #007aff;
-    border-bottom-color: #007aff;
-    font-weight: 600;
+    background-color: var(--card-bg);
+    color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    font-weight: 700;
 }
 
 /* * --------------------------------
- * 4. 计算器主体 (Calculator Body)
+ * 3. 核心网格布局 (Desktop vs Mobile)
  * --------------------------------
  */
-.calculator-body {
-    display: flex;
-    flex-wrap: wrap; /* 在小屏幕上换行 */
+.calculator-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 桌面双栏 */
+    gap: 20px;
+    align-items: start;
+}
+
+/* 卡片通用样式 */
+.card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: #fafbfc;
+}
+
+.card-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-main);
+}
+
+.card-body {
     padding: 20px;
-}
-
-.panel {
-    padding: 20px;
-    box-sizing: border-box; /* 确保 padding 不会撑开宽度 */
-}
-
-/* 双栏布局 */
-.input-panel {
-    flex: 1; /* 占据 1 份 */
-    min-width: 300px; /* 最小宽度 */
-    border-right: 1px solid #eee;
-}
-
-.output-panel {
-    flex: 1.2; /* 占据 1.2 份，使其稍宽 */
-    min-width: 400px;
-}
-
-/* 响应式：在小屏幕上变为单栏 */
-@media (max-width: 800px) {
-    .calculator-body {
-        flex-direction: column;
-        padding: 10px; /* [优化] 手机上减少内边距，留更多空间给内容 */
-    }
-
-    .input-panel, .output-panel {
-        /* [核心修复] 重置最小宽度，允许面板适应手机屏幕宽度 */
-        min-width: auto; 
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid #eee;
-        padding: 15px 10px; /* [优化] 减小面板内部边距 */
-    }
-
-    /* [新增优化] 手机上表单变为垂直排列，避免输入框太短 */
-    .form-group {
-        flex-direction: column;
-        align-items: stretch; /* 拉伸占满宽度 */
-    }
-
-    .form-group label {
-        flex-basis: auto;
-        margin-bottom: 5px; /* 标签和输入框之间增加间距 */
-    }
-    
-    /* 特殊处理：单选框组保持水平排列 */
-    .radio-group {
-        flex-direction: row;
-        flex-wrap: wrap;
-    }
-    
-    /* 结果项也垂直排列，防止文字截断 */
-    .result-item {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .result-item label {
-        margin-bottom: 5px;
-    }
-    
-    /* 调整预设下拉框在手机上的样式 */
-    .form-group .preset-select {
-        flex-basis: auto;
-        margin-right: 0;
-        margin-bottom: 5px;
-        width: 100%;
-    }
-    
-    .form-group span {
-        margin-left: 0;
-        margin-top: 5px;
-        text-align: right;
-    }
 }
 
 /* * --------------------------------
- * 5. 表单与输入 (Forms & Inputs)
+ * 4. 表单元素样式
  * --------------------------------
  */
-.panel h2 {
-    margin-top: 0;
-    color: #333;
+.section-divider {
+    font-size: 0.85rem;
+    color: var(--primary-color);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 25px 0 10px 0;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #f0f0f0;
 }
 
-fieldset {
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 15px;
-    margin-bottom: 20px;
-}
-
-legend {
-    font-weight: 600;
-    color: #007aff;
-    padding: 0 5px;
-    margin-left: 10px;
-}
-
-.form-group {
-    display: flex;
-    align-items: center;
+.input-group {
     margin-bottom: 15px;
 }
 
-.form-group label {
-    /* [MODIFIED] 减小标签宽度以防止重叠 */
-    flex-basis: 120px; 
-    font-weight: 500;
-}
-
-.form-group input[type="number"],
-.form-group input[type="text"],
-.form-group select {
-    flex: 1; /* 占据剩余空间 */
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 15px;
-}
-
-/* [MODIFIED] 调整预设下拉框的宽度以防止重叠 */
-.form-group .preset-select {
-    flex-basis: 130px;
-    flex-grow: 0;
-    flex-shrink: 0;
-    margin-right: 10px;
-    font-size: 14px;
-    padding: 8px 10px;
-    cursor: pointer;
-}
-
-.form-group input[readonly] {
-    background-color: #f0f0f0;
-    color: #222;
-    font-weight: bold;
-    cursor: not-allowed;
-}
-
-.form-group span {
-    margin-left: 10px;
-    color: #666;
-    font-weight: 500;
-}
-
-/* 流量模式切换 */
-.radio-group label {
-    flex-basis: auto;
-    margin-right: 15px;
-    margin-left: 5px;
-    font-weight: normal;
-}
-
-.radio-group input[type="radio"] {
-    cursor: pointer;
-}
-
-/* 操作按钮 */
-.action-buttons {
+.input-row {
     display: flex;
-    gap: 15px; /* 按钮间距 */
-    margin-top: 20px;
-}
-
-.action-buttons button {
-    flex: 1;
-    padding: 12px 20px;
-    font-size: 16px;
-    font-weight: 600;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-#calculate-button {
-    background-color: #007aff;
-    color: white;
-}
-
-#calculate-button:hover {
-    background-color: #005bb5;
-}
-
-#calculate-button:disabled {
-    background-color: #a0a0a0;
-    cursor: not-allowed;
-}
-
-#clear-button {
-    background-color: #f0f0f0;
-    color: #555;
-    border: 1px solid #ccc;
-}
-
-#clear-button:hover {
-    background-color: #e0e0e0;
-}
-
-/* * --------------------------------
- * 6. 输出结果 (Results)
- * --------------------------------
- */
-.results-summary {
-    display: grid;
-    grid-template-columns: 1fr; /* 单栏 */
     gap: 15px;
-    margin-bottom: 25px;
 }
 
-.result-item {
+.input-row .half {
+    flex: 1;
+}
+
+.input-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: var(--text-sub);
+    font-weight: 500;
+}
+
+/* 核心输入框容器 */
+.input-wrapper {
     display: flex;
     align-items: center;
-}
-.result-item label {
-    flex-basis: 180px; /* 标签宽度 */
-    font-weight: 500;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0 12px;
+    transition: border-color 0.2s;
 }
 
-.output-panel h3 {
-    border-bottom: 1px solid #eee;
-    padding-bottom: 5px;
+.input-wrapper:focus-within {
+    border-color: var(--primary-color);
+    background-color: #fff;
+}
+
+.input-wrapper input,
+.input-wrapper select {
+    flex: 1;
+    border: none;
+    background: transparent;
+    height: 42px; /* 手指点击舒适高度 */
+    font-size: 1rem;
+    color: var(--text-main);
+    width: 100%;
+    outline: none;
+}
+
+.input-wrapper .unit {
+    color: #999;
+    font-size: 0.85rem;
+    padding-left: 8px;
+    white-space: nowrap;
+}
+
+/* 组合输入框 (Select + Input) */
+.input-combo {
+    display: flex;
+    gap: 10px;
+}
+
+.preset-select {
+    width: 100px;
+    flex-shrink: 0;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0 10px;
+    font-size: 0.9rem;
+    color: var(--text-main);
+}
+
+/* 胶囊单选按钮 (Radio Pill) - 替代丑陋的圆圈 */
+.radio-pill-group {
+    display: flex;
+    background: var(--input-bg);
+    padding: 4px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.radio-pill {
+    flex: 1;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+}
+
+.radio-pill input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.radio-pill span {
+    display: block;
+    padding: 8px 0;
+    font-size: 0.9rem;
+    color: var(--text-sub);
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.radio-pill input:checked + span {
+    background-color: #fff;
+    color: var(--primary-color);
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+/* 列表式单选 (Radio List) */
+.radio-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.radio-item {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 8px 0;
+}
+
+/* 自定义 Radio 外观 */
+.radio-item input[type="radio"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ccc;
+    border-radius: 50%;
+    margin-right: 10px;
+    position: relative;
+}
+
+.radio-item input[type="radio"]:checked {
+    border-color: var(--primary-color);
+    background-color: #fff;
+}
+
+.radio-item input[type="radio"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 4px; left: 4px;
+    width: 8px; height: 8px;
+    background: var(--primary-color);
+    border-radius: 50%;
+}
+
+.radio-text {
+    font-size: 0.95rem;
+}
+
+/* 按钮组 */
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     margin-top: 30px;
 }
 
-.table-container {
+.btn {
     width: 100%;
-    overflow-x: auto; /* 保证表格在小屏幕上可以滚动 */
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
 }
+.btn-primary:hover { background-color: var(--primary-hover); }
+.btn-primary:disabled { background-color: #ccc; cursor: not-allowed; }
 
-th, td {
-    padding: 10px 12px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-}
-
-thead th {
-    background-color: #f9f9f9;
-    font-size: 14px;
+.btn-secondary {
+    background-color: #e6e6e6;
     color: #333;
 }
 
-tbody tr:nth-child(even) {
-    background-color: #fcfcfc;
+/* * --------------------------------
+ * 5. 结果显示区域
+ * --------------------------------
+ */
+.result-highlight {
+    background: #f0f9ff;
+    border: 1px solid #bae7ff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+    text-align: center;
 }
 
-tbody td {
-    font-family: "Courier New", Courier, monospace;
+.result-box label {
+    display: block;
+    color: var(--text-sub);
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.result-box .result-value {
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+}
+
+.result-box input {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    border: none;
+    background: transparent;
+    width: 180px;
+    text-align: right;
+    margin-right: 5px;
+}
+
+.result-box .unit {
+    font-size: 1rem;
+    color: var(--text-sub);
     font-weight: 600;
-    font-size: 15px;
+}
+
+.result-row-group {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #bae7ff;
+}
+
+.result-mini-box label {
+    font-size: 0.8rem;
+    margin-bottom: 2px;
+}
+
+.result-mini-box .flex-val input {
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    width: 80px;
+    text-align: center;
+    color: #333;
+}
+
+/* 表格样式 */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
+.data-table th, .data-table td {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+}
+
+.data-table th {
+    background: #fafafa;
+    color: #666;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.data-table td {
+    font-family: "Courier New", monospace;
+    font-weight: 600;
+}
+
+.data-table tr:first-child th:first-child {
+    border-top-left-radius: 8px;
+}
+.data-table tr:first-child th:last-child {
+    border-top-right-radius: 8px;
+}
+
+.table-hint {
+    font-size: 0.75rem;
+    color: #999;
+    text-align: center;
+    margin-top: 8px;
+    display: none;
+}
+
+.hidden {
+    display: none !important;
 }
 
 /* * --------------------------------
- * 7. 辅助类 (Utility)
+ * 6. 响应式适配 (Mobile Breakpoint)
  * --------------------------------
  */
-.hidden {
-    display: none !important;
+@media (max-width: 800px) {
+    .calculator-grid {
+        grid-template-columns: 1fr; /* 单栏 */
+        gap: 15px;
+    }
+
+    .app-wrapper {
+        padding: 10px;
+    }
+    
+    .card-body {
+        padding: 15px;
+    }
+
+    .input-combo {
+        flex-direction: column; /* 手机上预设下拉框换行 */
+    }
+    .preset-select {
+        width: 100%;
+    }
+
+    .table-hint {
+        display: block; /* 手机上提示可滑动 */
+    }
+    
+    .result-box input {
+        font-size: 2rem;
+        width: 140px;
+    }
+    
+    .data-table th, .data-table td {
+        padding: 8px 4px;
+        font-size: 0.85rem;
+    }
 }
